@@ -39,3 +39,30 @@ filter?.addEventListener('change', () => {
     row.hidden = filter.value !== 'all' && (filter.value === 'late' ? row.dataset.late !== 'True' : row.dataset.state !== filter.value);
   }
 });
+const authForm = document.querySelector('#auth-form');
+authForm?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = authForm.querySelector('button');
+  const feedback = document.querySelector('#auth-feedback');
+  const runId = authForm.dataset.run;
+  const hour = document.querySelector('#auth-hour').value;
+  button.disabled = true;
+  feedback.hidden = false;
+  feedback.dataset.failed = 'false';
+  feedback.textContent = '正在按授权小时出单';
+  try {
+    const response = await fetch(`/api/authorizations/${runId}`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({hour}),
+    });
+    const record = await response.json();
+    if (!response.ok) throw new Error(record.detail);
+    feedback.textContent = record.reused ? '该授权已出单，复用原证据单' : '授权证据单已签发';
+    setTimeout(() => location.reload(), 600);
+  } catch (error) {
+    feedback.dataset.failed = 'true';
+    feedback.textContent = error.message || '签发失败，可重试且不新增证据单';
+  } finally {
+    button.disabled = false;
+  }
+});

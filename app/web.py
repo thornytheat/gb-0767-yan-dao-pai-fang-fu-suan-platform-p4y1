@@ -5,6 +5,7 @@ from app.archive.certificate import issue
 from app.archive.manifest import batch_key
 from app.config import VERSION
 from app.errors import InputError
+from app.monitor.clock import local, minute
 from app.monitor.inspection import Inspection
 from app.monitor.source import sample
 from app.reasons import LABELS
@@ -20,12 +21,14 @@ def show(page='home'):
     if page != 'home' and page not in PAGES:
         raise InputError('STAGE_UNKNOWN', '找不到监测工序', 404)
     name, run_id = request.args.get('sample', 'dirty'), request.args.get('run')
-    history, certificate = [], None
+    history, certificate, grants = [], None, []
     if run_id:
         packet = archive().require(run_id)
         results, meta = packet['results'], packet['manifest']
         if page == 'evidence':
             certificate = issue(packet)
+            grants = [{'item': item, 'hour_local': local(minute(item['scope']['hour']))}
+                      for item in archive().authorizations(run_id)]
     else:
         sources = sample(name)
         audit = Inspection(sources)
@@ -37,5 +40,6 @@ def show(page='home'):
     chart = [row for row in results['hours']['rows'] if row['mg_nm3'] is not None]
     ceiling = max((float(row['mg_nm3']) for row in chart), default=0)
     return render_template('base.html', page=page, pages=PAGES, name=name, run_id=run_id, history=history,
-                           certificate=certificate, result=results, meta=meta, ceiling=ceiling, labels=LABELS,
+                           certificate=certificate, grants=grants, result=results, meta=meta, ceiling=ceiling,
+                           labels=LABELS,
                            issue_rows=[r for r in results['validity']['rows'] if r['state'] == 'missing' or r['late']])

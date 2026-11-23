@@ -14,6 +14,7 @@
 | M5 报送差异对账 | 核对差值、单据和游离报送 | `GET /api/samples/dirty/reports` | `app/monitor/reconcile.py` `app/monitor/reports.py` | `tests/test_reports.py` |
 | M6 批次留档复跑 | 汇总归档、并发复跑和查看历史 | `POST /api/runs` | `app/archive/run.py` `app/archive/store.py` | `tests/test_runs.py` |
 | M7 监测证据签发 | 下载和校验原件、摘要和判据 | `GET /api/export/{id}` | `app/archive/certificate.py` | `tests/test_evidence.py` |
+| M8 授权小时证据单 | 按授权小时裁剪出单、重试幂等与独立复算 | `POST /api/authorizations/{id}` | `app/archive/scope.py` `app/archive/store.py` | `tests/test_authorization.py` |
 
 ## 陷阱登记
 
